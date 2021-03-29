@@ -9,7 +9,7 @@
 
 import torch
 import torch.nn as nn
-from common import TNNBlock3D
+from models.common import TNNBlock3D
 
 
 class Decoder(nn.Module):

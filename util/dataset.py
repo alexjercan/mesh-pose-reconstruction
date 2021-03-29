@@ -6,8 +6,6 @@
 # - https://github.com/ultralytics/yolov5/blob/master/utils/datasets.py
 
 import os
-import glob
-from pathlib import Path
 
 import cv2
 import torch
@@ -16,35 +14,35 @@ import numpy as np
 from copy import copy
 from torch.utils.data import Dataset, DataLoader
 
-from util.common import exr2normal, exr2depth, img2bgr, pkl2mesh, resize_img, img2mesh_paths, img_formats
-
-L_RGB = 'rgb'
-L_DEPTH = 'depth'
-L_NORMAL = 'normal'
+from util.common import exr2normal, exr2depth, img2bgr, pkl2mesh, resize_img, load_mesh_paths, img_formats, L_RGB, \
+    L_DEPTH, L_NORMAL, load_img_paths
 
 
-def create_dataloader(path, batch_size=2, used_layers=None, img_size=224, map_size=32, augment=False, workers=8):
-    dataset = BDataset(path, used_layers=used_layers, img_size=img_size, map_size=map_size, augment=augment)
+def create_dataloader(img_path, mesh_path, batch_size=2, used_layers=None, img_size=224, map_size=32, augment=False,
+                      workers=8, pin_memory=True):
+    dataset = BDataset(img_path, mesh_path, used_layers=used_layers, img_size=img_size, map_size=map_size,
+                       augment=augment)
     batch_size = min(batch_size, len(dataset))
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, workers])  # number of workers
-    dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, pin_memory=True)
-    return dataloader, dataset
+    dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, pin_memory=pin_memory)
+    return dataset, dataloader
 
 
 class BDataset(Dataset):
-    def __init__(self, path, used_layers=None, img_size=224, map_size=32, augment=False):
+    def __init__(self, img_path, mesh_path, used_layers=None, img_size=224, map_size=32, augment=False):
         super(BDataset, self).__init__()
         if used_layers is None:
             used_layers = [L_RGB]
-        self.path = path
+        self.img_path = img_path
+        self.mesh_path = mesh_path
         self.used_layers = used_layers
         self.img_size = img_size
         self.map_size = map_size
         self.augment = augment
 
-        self.layer_files = get_layer_files(path, used_layers)
+        self.layer_files = load_img_paths(self.img_path, used_layers)
         self.img_files = self.layer_files[self.used_layers[0]]
-        self.mesh_files = img2mesh_paths(self.img_files, self.used_layers[0])
+        self.mesh_files = load_mesh_paths(self.mesh_path)
         self.layers = [None] * len(self.img_files)
         self.meshes = [None] * len(self.img_files)
 
@@ -61,36 +59,12 @@ class BDataset(Dataset):
         layers = {k: layers[k].transpose(2, 0, 1) for k in layers}
         img0 = layers[self.used_layers[0]]
         layers = [layers[k] for k in self.used_layers]
-        layers = np.concatenate(layers, axis=0)
+        layers = np.concatenate(layers, axis=0).astype(np.float32) / 255.0
 
         img0 = np.ascontiguousarray(img0)
         layers = np.ascontiguousarray(layers)
 
         return torch.from_numpy(img0), torch.from_numpy(layers), torch.from_numpy(voxels)
-
-
-def get_layer_files(path, used_layers):
-    layer_files = {}
-    try:
-        f = []  # image files
-        for p in path if isinstance(path, list) else [path]:
-            p = Path(p)  # os-agnostic
-            if p.is_dir():  # dir
-                f += glob.glob(str(p / '**' / '*.*'), recursive=True)
-            elif p.is_file():  # file
-                with open(p, 'r') as t:
-                    t = t.read().strip().splitlines()
-                    parent = str(p.parent) + os.sep
-                    f += [x.replace('./', parent) if x.startswith('./') else x for x in t]  # local to global path
-            else:
-                raise Exception(f'{p} does not exist')
-        for layer in used_layers:
-            layer_files[layer] = sorted([x.replace('/', os.sep) for x in f if
-                                         x.split('.')[-1].lower() in img_formats and layer.lower() in x.lower()])
-    except Exception as e:
-        raise Exception(f'Error loading data from {path}: {e}')
-    finally:
-        return layer_files
 
 
 def load_data(self, index):
@@ -171,7 +145,7 @@ def load_normal(layer_files, index, img_size, augment=None):
 
 def load_voxels(mesh_files, index, map_size):
     meshes = pkl2mesh((mesh_files[index]))
-    voxels = np.zeros((map_size, map_size, map_size))
+    voxels = np.zeros((map_size, map_size, map_size)).astype(np.float32)
 
     vertices = np.concatenate([vs for (_, vs, _) in meshes], axis=1)
     vertices[:, 0] *= (map_size - 1) / np.max(vertices[:, 0])
@@ -185,8 +159,7 @@ def load_voxels(mesh_files, index, map_size):
 
 
 if __name__ == "__main__":
-    ds = BDataset("../../bdataset/images/train")
-    dl = DataLoader(ds, batch_size=10)
+    ds, dl = create_dataloader("../../bdataset/images/train", "../../bdataset/labels/train", batch_size=10)
     i0, ls, vxs = next(iter(dl))
 
     import matplotlib.pyplot as plt

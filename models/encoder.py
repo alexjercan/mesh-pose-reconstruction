@@ -10,7 +10,7 @@
 
 import torch
 import torch.nn as nn
-from common import CNNBlock, ResBlock
+from models.common import CNNBlock, ResBlock
 
 
 class Encoder(nn.Module):
