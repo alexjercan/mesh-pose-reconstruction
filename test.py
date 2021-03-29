@@ -18,7 +18,7 @@ from util.dataset import create_dataloader
 def test(encoder=None, decoder=None):
     torch.backends.cudnn.benchmark = True
 
-    dataset, dataloader = create_dataloader(config.IMG_DIR + "/train", config.MESH_DIR + "/train",
+    dataset, dataloader = create_dataloader(config.IMG_DIR + "/test", config.MESH_DIR + "/test",
                                             batch_size=config.BATCH_SIZE, used_layers=config.USED_LAYERS,
                                             img_size=config.IMAGE_SIZE, map_size=config.MAP_SIZE,
                                             augment=config.AUGMENT, workers=config.NUM_WORKERS,
