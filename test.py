@@ -11,7 +11,7 @@ from tqdm import tqdm
 import config
 from models.decoder import Decoder
 from models.encoder import Encoder
-from util.common import num_channels, load_checkpoint, var_or_cuda
+from util.common import num_channels, load_checkpoint, var_or_cuda, plot_volumes
 from util.dataset import create_dataloader
 
 
@@ -64,6 +64,9 @@ def test(encoder=None, decoder=None):
             mean_loss = sum(encoder_losses) / len(encoder_losses)
             sample_iou = ['%.4f' % si for si in sample_iou]
             loop.set_postfix(loss=mean_loss, iou=sample_iou)
+
+            if i == 0 and config.PLOT:
+                plot_volumes(predictions)
 
 
 if __name__ == "__main__":

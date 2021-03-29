@@ -15,7 +15,7 @@ from copy import copy
 from torch.utils.data import Dataset, DataLoader
 
 from util.common import exr2normal, exr2depth, img2bgr, pkl2mesh, resize_img, load_mesh_paths, img_formats, L_RGB, \
-    L_DEPTH, L_NORMAL, load_img_paths
+    L_DEPTH, L_NORMAL, load_img_paths, plot_volumes
 
 
 def create_dataloader(img_path, mesh_path, batch_size=2, used_layers=None, img_size=224, map_size=32, augment=False,
@@ -161,12 +161,4 @@ def load_voxels(mesh_files, index, map_size):
 if __name__ == "__main__":
     ds, dl = create_dataloader("../../bdataset/images/train", "../../bdataset/labels/train", batch_size=10)
     i0, ls, vxs = next(iter(dl))
-
-    import matplotlib.pyplot as plt
-
-    for vx in vxs:
-        xd, yd, zd = np.nonzero(vx.numpy())
-        fig = plt.figure()
-        ax = plt.axes(projection='3d')
-        ax.scatter3D(xd, yd, zd, c=zd, cmap='Greens', s=100, marker="o")
-        plt.show()
+    plot_volumes(vxs)

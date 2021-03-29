@@ -91,7 +91,8 @@ def train():
         encoder_lr_scheduler.step()
         decoder_lr_scheduler.step()
 
-        test(encoder, decoder)
+        if config.TEST:
+            test(encoder, decoder)
         save_checkpoint(epoch_idx, encoder, decoder, runs_dir)
 
 
