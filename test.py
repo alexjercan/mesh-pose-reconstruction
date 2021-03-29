@@ -27,15 +27,13 @@ def test(encoder=None, decoder=None):
         in_channels = num_channels(config.USED_LAYERS)
         encoder = Encoder(in_channels=in_channels)
         decoder = Decoder()
-        if torch.cuda.is_available():
-            encoder = torch.nn.DataParallel(encoder).cuda()
-            decoder = torch.nn.DataParallel(decoder).cuda()
+        encoder = encoder.to(config.DEVICE)
+        decoder = decoder.to(config.DEVICE)
 
-        epoch_idx, encoder, decoder = load_checkpoint(encoder, decoder)
+        epoch_idx, encoder, decoder = load_checkpoint(encoder, decoder, config.CHECKPOINT_FILE, config.DEVICE)
 
     bce_loss = torch.nn.BCELoss()
 
-    n_samples = len(dataloader)
     loop = tqdm(dataloader, leave=True)
     encoder_losses = []
 

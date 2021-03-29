@@ -1,6 +1,8 @@
+import torch
 from util.common import L_RGB, L_DEPTH, L_NORMAL
 
-DATASET = 'bdataset'
+DATASET = 'bdataset_tiny'
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_WORKERS = 4
 BATCH_SIZE = 4
 IMAGE_SIZE = 224
@@ -23,7 +25,7 @@ AUGMENT = False
 TEST = True
 PLOT = False
 OUT_PATH = "./"
-CHECKPOINT_FILE = "checkpoint.pth.tar"
+CHECKPOINT_FILE = "tiny.pth"
 IMG_DIR = "../" + DATASET + "/images/"
 MESH_DIR = "../" + DATASET + "/labels/"
 USED_LAYERS = [L_RGB, L_DEPTH, L_NORMAL]

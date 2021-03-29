@@ -126,8 +126,8 @@ def var_or_cuda(x):
     return x
 
 
-def load_checkpoint(encoder, decoder, checkpoint_file):
-    checkpoint = torch.load(checkpoint_file)
+def load_checkpoint(encoder, decoder, checkpoint_file, device):
+    checkpoint = torch.load(checkpoint_file, map_location=device)
     init_epoch = checkpoint['epoch_idx']
     encoder.load_state_dict(checkpoint['encoder_state_dict'])
     decoder.load_state_dict(checkpoint['decoder_state_dict'])

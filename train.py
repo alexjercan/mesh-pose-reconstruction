@@ -70,15 +70,14 @@ def train():
     decoder_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(decoder_solver,
                                                                 milestones=config.DECODER_LR_MILESTONES,
                                                                 gamma=config.GAMMA)
-    if torch.cuda.is_available():
-        encoder = torch.nn.DataParallel(encoder).cuda()
-        decoder = torch.nn.DataParallel(decoder).cuda()
+    encoder = encoder.to(config.DEVICE)
+    decoder = decoder.to(config.DEVICE)
 
     bce_loss = torch.nn.BCELoss()
 
     init_epoch = 0
     if config.CHECKPOINT_FILE and config.LOAD_MODEL:
-        init_epoch, encoder, decoder = load_checkpoint(encoder, decoder, config.CHECKPOINT_FILE)
+        init_epoch, encoder, decoder = load_checkpoint(encoder, decoder, config.CHECKPOINT_FILE, config.DEVICE)
 
     output_dir = os.path.join(config.OUT_PATH, '%s', re.sub("[^0-9a-zA-Z]+", "-", dt.now().isoformat()))
     runs_dir = output_dir % 'runs'
