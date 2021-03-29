@@ -148,9 +148,9 @@ def save_checkpoint(epoch_idx, encoder, decoder, dir_checkpoints):
     torch.save(checkpoint, output_path)
 
 
-def plot_volumes(volumes):
+def plot_volumes(volumes, th=0):
     for volume in volumes:
-        xd, yd, zd = np.nonzero(volume.numpy())
+        xd, yd, zd = np.where(volume.numpy() > th)
         fig = plt.figure()
         ax = plt.axes(projection='3d')
         ax.scatter3D(xd, yd, zd, c=zd, cmap='Greens', s=100, marker="o")
