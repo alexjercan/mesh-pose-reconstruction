@@ -14,6 +14,7 @@ from tqdm import tqdm
 from datetime import datetime as dt
 from models.decoder import Decoder
 from models.encoder import Encoder
+from test import test
 from util.common import num_channels, init_weights, var_or_cuda, save_checkpoint, load_checkpoint
 from util.dataset import create_dataloader
 
@@ -90,8 +91,7 @@ def train():
         encoder_lr_scheduler.step()
         decoder_lr_scheduler.step()
 
-        # iou = test_net(cfg, epoch_idx + 1, val_data_loader, val_writer, encoder, decoder, refiner, merger)
-
+        test(encoder, decoder)
         save_checkpoint(epoch_idx, encoder, decoder, runs_dir)
 
 

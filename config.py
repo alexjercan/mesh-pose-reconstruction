@@ -1,5 +1,3 @@
-import torch
-
 from util.common import L_RGB, L_DEPTH, L_NORMAL
 
 DATASET = 'bdataset'
@@ -15,7 +13,7 @@ BETAS = (.9, .999)
 GAMMA = .5
 WEIGHT_DECAY = 1e-4
 NUM_EPOCHS = 3
-CONF_THRESHOLD = 0.05
+VOXEL_THRESH = [.2, .3, .4, .5]
 MAP_IOU_THRESH = 0.5
 NMS_IOU_THRESH = 0.45
 PIN_MEMORY = True
@@ -27,4 +25,3 @@ CHECKPOINT_FILE = "checkpoint.pth.tar"
 IMG_DIR = "../" + DATASET + "/images/"
 MESH_DIR = "../" + DATASET + "/labels/"
 USED_LAYERS = [L_RGB, L_DEPTH, L_NORMAL]
-

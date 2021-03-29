@@ -10,6 +10,7 @@ from pathlib import Path
 
 import cv2
 import pickle
+import matplotlib.pyplot as plt
 
 import numpy as np
 import torch
@@ -145,3 +146,12 @@ def save_checkpoint(epoch_idx, encoder, decoder, dir_checkpoints):
         'decoder_state_dict': decoder.state_dict(),
     }
     torch.save(checkpoint, output_path)
+
+
+def plot_volumes(volumes):
+    for volume in volumes:
+        xd, yd, zd = np.nonzero(volume.numpy())
+        fig = plt.figure()
+        ax = plt.axes(projection='3d')
+        ax.scatter3D(xd, yd, zd, c=zd, cmap='Greens', s=100, marker="o")
+        plt.show()
