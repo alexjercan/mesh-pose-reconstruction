@@ -91,7 +91,13 @@ def train():
 
         if config.TEST:
             test(encoder, decoder)
-        save_checkpoint(epoch_idx, encoder, decoder, runs_dir)
+        if config.SAVE_MODEL:
+            save_checkpoint(epoch_idx, encoder, decoder, runs_dir)
+
+    if not config.TEST:
+        test(encoder, decoder)
+    if not config.SAVE_MODEL:
+        save_checkpoint(config.NUM_EPOCHS - 1, encoder, decoder, runs_dir)
 
 
 if __name__ == "__main__":
