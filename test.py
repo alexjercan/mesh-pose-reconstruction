@@ -64,7 +64,7 @@ def test(encoder=None, decoder=None):
             loop.set_postfix(loss=mean_loss, iou=sample_iou)
 
             if i == 0 and config.PLOT:
-                plot_volumes(predictions, th=0.5)
+                plot_volumes(predictions.cpu(), th=0.5)
 
 
 if __name__ == "__main__":
