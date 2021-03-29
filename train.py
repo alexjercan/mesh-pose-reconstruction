@@ -27,11 +27,10 @@ def train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decod
         layers = var_or_cuda(layers)
         volumes = var_or_cuda(volumes)
 
-        with torch.cuda.amp.autocast():
-            features = encoder(layers)
-            predictions = decoder(features)
-            predictions = torch.mean(predictions, dim=1)
-            encoder_loss = loss_fn(predictions, volumes) * 10
+        features = encoder(layers)
+        predictions = decoder(features)
+        predictions = torch.mean(predictions, dim=1)
+        encoder_loss = loss_fn(predictions, volumes) * 10
 
         encoder_losses.append(encoder_loss.item())
 
