@@ -61,7 +61,7 @@ class BDataset(Dataset):
         img0 = np.ascontiguousarray(img0)
         layers = np.ascontiguousarray(layers)
 
-        return torch.from_numpy(img0), torch.from_numpy(layers), torch.from_numpy(volume)
+        return torch.from_numpy(img0), torch.from_numpy(layers), torch.from_numpy(volume), self.img_files[index]
 
 
 def load_data(self, index):
@@ -154,5 +154,5 @@ def load_volume(mesh_files, index, map_size):
 
 if __name__ == "__main__":
     ds, dl = create_dataloader("../../bdataset_tiny/images/train", "../../bdataset_tiny/labels/train", batch_size=10)
-    i0, ls, vxs = next(iter(dl))
-    plot_volumes(vxs)
+    i0, ls, vxs, img_files = next(iter(dl))
+    plot_volumes(vxs, img_files)

@@ -25,7 +25,7 @@ def train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decod
     loop = tqdm(dataloader, leave=True)
     losses = []
 
-    for i, (img0s, layers, volumes) in enumerate(loop):
+    for i, (img0s, layers, volumes, _) in enumerate(loop):
         layers = layers.to(config.DEVICE, non_blocking=True)
         volumes = volumes.to(config.DEVICE, non_blocking=True)
 

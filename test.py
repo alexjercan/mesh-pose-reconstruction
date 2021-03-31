@@ -41,7 +41,7 @@ def test(encoder=None, decoder=None):
     encoder.eval()
     decoder.eval()
 
-    for i, (img0s, layers, volumes) in enumerate(loop):
+    for i, (img0s, layers, volumes, img_files) in enumerate(loop):
         with torch.no_grad():
             layers = layers.to(config.DEVICE, non_blocking=True)
             volumes = volumes.to(config.DEVICE, non_blocking=True)
@@ -57,7 +57,8 @@ def test(encoder=None, decoder=None):
             loop.set_postfix(loss=mean_loss, iou=sample_iou)
 
             if i == 0 and config.PLOT:
-                plot_volumes(to_volume(predictions).cpu())
+                plot_volumes(to_volume(predictions).cpu(), img_files)
+                plot_volumes(volumes.cpu(), img_files)
 
 
 if __name__ == "__main__":
