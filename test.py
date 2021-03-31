@@ -12,7 +12,7 @@ import config
 from models.decoder import Decoder
 from models.encoder import Encoder
 from models.loss import LossFunction
-from util.common import num_channels, load_checkpoint, plot_volumes
+from util.common import num_channels, load_checkpoint, plot_volumes, get_metrics, to_volume
 from util.dataset import create_dataloader
 
 
@@ -49,24 +49,15 @@ def test(encoder=None, decoder=None):
             features = encoder(layers)
             predictions = decoder(features)
             encoder_loss = loss_fn(predictions, volumes)
-
             encoder_losses.append(encoder_loss.item())
 
-            predictions = torch.argmax(predictions, dim=1)
-
-            # sample_iou = []
-            # for th in config.VOXEL_THRESH:
-            #     _volume = torch.ge(predictions, th).float()
-            #     intersection = torch.sum(_volume.mul(volumes)).float()
-            #     union = torch.sum(torch.ge(_volume.add(volumes), 1)).float()
-            #     sample_iou.append((intersection / union).item())
-
-            # mean_loss = sum(encoder_losses) / len(encoder_losses)
-            # sample_iou = ['%.4f' % si for si in sample_iou]
-            # loop.set_postfix(loss=mean_loss, iou=sample_iou)
+            sample_iou = get_metrics(predictions, volumes, config.VOXEL_THRESH)
+            sample_iou = ['%.4f' % si for si in sample_iou]
+            mean_loss = sum(encoder_losses) / len(encoder_losses)
+            loop.set_postfix(loss=mean_loss, iou=sample_iou)
 
             if i == 0 and config.PLOT:
-                plot_volumes(predictions.cpu())
+                plot_volumes(to_volume(predictions).cpu())
 
 
 if __name__ == "__main__":

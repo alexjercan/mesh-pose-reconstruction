@@ -153,3 +153,18 @@ def plot_volumes(volumes):
             cm = plt.cm.colors.ListedColormap(plt.cm.hsv(c/100))
             ax.scatter3D(x, y, z, c=c, cmap=cm, s=100, marker="o")
         plt.show()
+
+
+def get_metrics(predictions, volumes, voxel_thresh: list):
+    sample_iou = []
+    _volumes = torch.ge(volumes, 1).float()
+    for th in voxel_thresh:
+        _volume = torch.ge(to_volume(predictions), th).float()
+        intersection = torch.sum(_volume.mul(_volumes)).float()
+        union = torch.sum(torch.ge(_volume.add(_volumes), 1)).float()
+        sample_iou.append((intersection / union).item())
+    return sample_iou
+
+
+def to_volume(predictions):
+    return torch.argmax(predictions, dim=1)
