@@ -30,9 +30,9 @@ def num_channels(layers):
     return sum([nc[k] for k in layers])
 
 
-def resize_img(img, img_size, augment=None):
+def resize_img(img, img_size=False, augment=False):
     h0, w0 = img.shape[:2]  # orig hw
-    r = img_size / max(h0, w0)  # resize image to img_size
+    r = 1 if not img_size else img_size / max(h0, w0)  # resize image to img_size
     if r != 1:  # always resize down, only resize up if training with augmentation
         interp = cv2.INTER_AREA if r < 1 and not augment else cv2.INTER_LINEAR
         img = cv2.resize(img, (int(w0 * r), int(h0 * r)), interpolation=interp)
@@ -147,7 +147,7 @@ def plot_volumes(volumes, img_files):
         volume = volume.numpy()
         xd, yd, zd = np.where(volume > 0)
         cd = volume[xd, yd, zd]
-        fig = plt.figure()
+        _ = plt.figure()
         ax = plt.axes(projection='3d')
         for c, x, y, z in zip(cd, yd, xd, zd):
             cm = plt.cm.colors.ListedColormap(plt.cm.hsv(c/100))

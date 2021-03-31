@@ -27,6 +27,44 @@ def create_dataloader(img_path, mesh_path, batch_size=2, used_layers=None, img_s
     return dataset, dataloader
 
 
+class LoadImages:
+    def __init__(self, path, img_size=244, stride=32, used_layers=None):
+        self.img_size = img_size
+        self.stride = stride
+        if used_layers is None:
+            used_layers = [L_RGB]
+        self.used_layers = used_layers
+
+        self.layer_files = load_img_paths(path, used_layers)
+        self.img_files = self.layer_files[self.used_layers[0]]
+        self.nf = len(self.img_files)
+
+    def __iter__(self):
+        self.count = 0
+        return self
+
+    def __next__(self):
+        if self.count == self.nf:
+            raise StopIteration
+        path = self.img_files[self.count]
+
+        layers0, _, _ = load_layers(self.layer_files, self.count, self.used_layers)
+        self.count += 1
+        print(f'image {self.count}/{self.nf} {path}: ', end='')
+
+        assert layers0, f"Cannot load images for layers: {self.used_layers}"
+        layers0 = {k: letterbox(layers0[k], self.img_size, stride=self.stride)[0] for k in layers0}
+
+        layers = concat_layers(layers0, self.used_layers)
+        img0 = layers0[self.used_layers[0]]
+        img0 = np.ascontiguousarray(img0)
+
+        return img0, layers, path
+
+    def __len__(self):
+        return self.nf
+
+
 class BDataset(Dataset):
     def __init__(self, img_path, mesh_path, used_layers=None, img_size=224, map_size=32, augment=False):
         super(BDataset, self).__init__()
@@ -47,38 +85,46 @@ class BDataset(Dataset):
         return len(self.img_files)
 
     def __getitem__(self, index):
-        layers, volume, (h0, w0), (h, w) = load_data(self, index)
-        layers = {k: letterbox(layers[k], self.img_size, auto=False, scale_up=self.augment)[0] for k in layers}
+        layers0, volume, (h0, w0), (h, w) = load_data(self, index)
+        layers0 = {k: letterbox(layers0[k], self.img_size, auto=False, scale_up=self.augment)[0] for k in layers0}
 
-        # Convert
-        if L_RGB in layers:
-            layers[L_RGB] = layers[L_RGB][:, :, ::-1]
-        layers = {k: layers[k].transpose(2, 0, 1) for k in layers}
-        img0 = layers[self.used_layers[0]]
-        layers = [layers[k] for k in self.used_layers]
-        layers = np.concatenate(layers, axis=0).astype(np.float32) / 255.0
-
+        layers = concat_layers(layers0, self.used_layers)
+        img0 = layers0[self.used_layers[0]]
         img0 = np.ascontiguousarray(img0)
-        layers = np.ascontiguousarray(layers)
 
         return torch.from_numpy(img0), torch.from_numpy(layers), torch.from_numpy(volume), self.img_files[index]
 
 
 def load_data(self, index):
-    layers0 = {}
-    hw0, hw = (0, 0), (0, 0)
-    if L_RGB in self.used_layers:
-        img0, hw0, hw = load_image(self.layer_files[L_RGB], index, self.img_size, self.augment)
-        layers0[L_RGB] = img0
-    if L_DEPTH in self.used_layers:
-        depth0, hw0, hw = load_depth(self.layer_files[L_DEPTH], index, self.img_size, self.augment)
-        layers0[L_DEPTH] = depth0
-    if L_NORMAL in self.used_layers:
-        normal0, hw0, hw = load_normal(self.layer_files[L_NORMAL], index, self.img_size, self.augment)
-        layers0[L_NORMAL] = normal0
+    layers0, hw0, hw = load_layers(self.layer_files, index, self.used_layers, self.img_size, self.augment)
     volume0 = load_volume(self.mesh_files, index, self.map_size)
 
     return layers0, volume0, hw0, hw
+
+
+def load_layers(layer_files, index, used_layers, img_size=False, augment=False):
+    layers0 = {}
+    hw0, hw = (0, 0), (0, 0)
+    if L_RGB in used_layers:
+        img0, hw0, hw = load_image(layer_files[L_RGB], index, img_size, augment)
+        layers0[L_RGB] = img0
+    if L_DEPTH in used_layers:
+        depth0, hw0, hw = load_depth(layer_files[L_DEPTH], index, img_size, augment)
+        layers0[L_DEPTH] = depth0
+    if L_NORMAL in used_layers:
+        normal0, hw0, hw = load_normal(layer_files[L_NORMAL], index, img_size, augment)
+        layers0[L_NORMAL] = normal0
+    return layers0, hw0, hw
+
+
+def concat_layers(layers, used_layers):
+    if L_RGB in layers:
+        layers[L_RGB] = layers[L_RGB][:, :, ::-1]
+    layers = {k: layers[k].transpose(2, 0, 1) for k in layers}
+    layers = [layers[k] for k in used_layers]
+    layers = np.concatenate(layers, axis=0).astype(np.float32) / 255.0
+    layers = np.ascontiguousarray(layers)
+    return layers
 
 
 def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scale_fill=False, scale_up=True, stride=32):
@@ -153,6 +199,9 @@ def load_volume(mesh_files, index, map_size):
 
 
 if __name__ == "__main__":
-    ds, dl = create_dataloader("../../bdataset_tiny/images/train", "../../bdataset_tiny/labels/train", batch_size=10)
-    i0, ls, vxs, img_files = next(iter(dl))
+    _, dl = create_dataloader("../../bdataset_tiny/images/train", "../../bdataset_tiny/labels/train", batch_size=2)
+    _, _, vxs, img_files = next(iter(dl))
     plot_volumes(vxs, img_files)
+
+    ds = LoadImages("../../bdataset_tiny/images/train")
+    _, _, img_files = next(iter(ds))
