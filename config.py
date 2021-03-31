@@ -29,4 +29,5 @@ OUT_PATH = "./"
 CHECKPOINT_FILE = "tiny.pth"
 IMG_DIR = "../" + DATASET + "/images/"
 MESH_DIR = "../" + DATASET + "/labels/"
+DETECT_PATH = "./data/images"
 USED_LAYERS = [L_RGB, L_DEPTH, L_NORMAL]
