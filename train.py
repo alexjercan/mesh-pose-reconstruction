@@ -4,6 +4,7 @@
 #
 # References:
 #
+
 import os
 import re
 
@@ -14,33 +15,33 @@ from tqdm import tqdm
 from datetime import datetime as dt
 from models.decoder import Decoder
 from models.encoder import Encoder
+from models.loss import LossFunction
 from test import test
-from util.common import num_channels, init_weights, var_or_cuda, save_checkpoint, load_checkpoint
+from util.common import num_channels, init_weights, save_checkpoint, load_checkpoint
 from util.dataset import create_dataloader
 
 
 def train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decoder_solver):
     loop = tqdm(dataloader, leave=True)
-    encoder_losses = []
+    losses = []
 
     for i, (img0s, layers, volumes) in enumerate(loop):
-        layers = var_or_cuda(layers)
-        volumes = var_or_cuda(volumes)
+        layers = layers.to(config.DEVICE, non_blocking=True)
+        volumes = volumes.to(config.DEVICE, non_blocking=True)
 
         features = encoder(layers)
         predictions = decoder(features)
-        predictions = torch.mean(predictions, dim=1)
-        encoder_loss = loss_fn(predictions, volumes) * 10
+        loss = loss_fn(predictions, volumes)
 
-        encoder_losses.append(encoder_loss.item())
+        losses.append(loss.item())
 
         encoder.zero_grad()
         decoder.zero_grad()
-        encoder_loss.backward()
+        loss.backward()
         encoder_solver.step()
         decoder_solver.step()
 
-        mean_loss = sum(encoder_losses) / len(encoder_losses)
+        mean_loss = sum(losses) / len(losses)
         loop.set_postfix(loss=mean_loss)
 
 
@@ -51,11 +52,11 @@ def train():
                                             batch_size=config.BATCH_SIZE, used_layers=config.USED_LAYERS,
                                             img_size=config.IMAGE_SIZE, map_size=config.MAP_SIZE,
                                             augment=config.AUGMENT, workers=config.NUM_WORKERS,
-                                            pin_memory=config.PIN_MEMORY)
+                                            pin_memory=config.PIN_MEMORY, shuffle=True)
 
     in_channels = num_channels(config.USED_LAYERS)
     encoder = Encoder(in_channels=in_channels)
-    decoder = Decoder()
+    decoder = Decoder(num_classes=config.NUM_CLASSES+1)
     encoder.apply(init_weights)
     decoder.apply(init_weights)
     encoder_solver = torch.optim.Adam(filter(lambda p: p.requires_grad, encoder.parameters()),
@@ -73,7 +74,7 @@ def train():
     encoder = encoder.to(config.DEVICE)
     decoder = decoder.to(config.DEVICE)
 
-    bce_loss = torch.nn.BCELoss()
+    loss_fn = LossFunction()
 
     init_epoch = 0
     if config.CHECKPOINT_FILE and config.LOAD_MODEL:
@@ -85,7 +86,7 @@ def train():
     for epoch_idx in range(init_epoch, config.NUM_EPOCHS):
         encoder.train()
         decoder.train()
-        train_one_epoch(encoder, decoder, dataloader, bce_loss, encoder_solver, decoder_solver)
+        train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decoder_solver)
         encoder_lr_scheduler.step()
         decoder_lr_scheduler.step()
 

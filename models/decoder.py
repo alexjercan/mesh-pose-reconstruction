@@ -13,16 +13,13 @@ from models.common import TNNBlock3D
 
 
 class Decoder(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes=30):
         super(Decoder, self).__init__()
         self.layer1 = TNNBlock3D(in_channels=392, out_channels=128, kernel_size=4, stride=2, padding=1)
         self.layer2 = TNNBlock3D(in_channels=128, out_channels=64, kernel_size=4, stride=2, padding=1)
         self.layer3 = TNNBlock3D(in_channels=64, out_channels=32, kernel_size=4, stride=2, padding=1)
         self.layer4 = TNNBlock3D(in_channels=32, out_channels=8, kernel_size=4, stride=2, padding=1)
-        self.layer5 = nn.Sequential(
-            nn.ConvTranspose3d(8, 1, kernel_size=1, bias=False),
-            nn.Sigmoid()
-        )
+        self.layer5 = nn.ConvTranspose3d(8, num_classes, kernel_size=1)
 
     def forward(self, x):
         x = x.view(-1, 392, 2, 2, 2)
@@ -30,7 +27,7 @@ class Decoder(nn.Module):
 
 
 if __name__ == "__main__":
-    volumes = torch.rand((2, 392, 2, 2, 2))
-    decoder = Decoder()
+    volumes = torch.rand((2, 64, 7, 7))
+    decoder = Decoder(num_classes=31)
     volumes = decoder(volumes)
-    assert volumes.shape == torch.Size([2, 1, 32, 32, 32])
+    assert volumes.shape == torch.Size([2, 31, 32, 32, 32])

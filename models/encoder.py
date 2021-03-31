@@ -7,7 +7,6 @@
 # - https://arxiv.org/pdf/2006.12250.pdf
 # - https://gitlab.com/hzxie/Pix2Vox/-/blob/master/models/encoder.py
 
-
 import torch
 import torch.nn as nn
 from models.common import CNNBlock, ResBlock

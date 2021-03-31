@@ -11,20 +11,19 @@ import cv2
 import torch
 import numpy as np
 
-from copy import copy
 from torch.utils.data import Dataset, DataLoader
 
-from util.common import exr2normal, exr2depth, img2bgr, pkl2mesh, resize_img, load_mesh_paths, img_formats, L_RGB, \
-    L_DEPTH, L_NORMAL, load_img_paths, plot_volumes
+from util.common import exr2normal, exr2depth, img2bgr, pkl2mesh, resize_img, load_mesh_paths, L_RGB, L_DEPTH, \
+    L_NORMAL, load_img_paths, plot_volumes
 
 
 def create_dataloader(img_path, mesh_path, batch_size=2, used_layers=None, img_size=224, map_size=32, augment=False,
-                      workers=8, pin_memory=True):
+                      workers=8, pin_memory=True, shuffle=True):
     dataset = BDataset(img_path, mesh_path, used_layers=used_layers, img_size=img_size, map_size=map_size,
                        augment=augment)
     batch_size = min(batch_size, len(dataset))
     nw = min([os.cpu_count(), batch_size if batch_size > 1 else 0, workers])  # number of workers
-    dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, pin_memory=pin_memory)
+    dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, pin_memory=pin_memory, shuffle=shuffle)
     return dataset, dataloader
 
 
@@ -139,20 +138,21 @@ def load_normal(layer_files, index, img_size, augment=None):
 
 def load_volume(mesh_files, index, map_size):
     meshes = pkl2mesh((mesh_files[index]))
-    volume = np.zeros((map_size, map_size, map_size)).astype(np.float32)
+    volumes = [[list(v) + [c + 1] for v in vs] for (c, vs, _) in meshes]
 
-    vertices = np.concatenate([vs for (_, vs, _) in meshes], axis=1)
-    vertices[:, 0] *= (map_size - 1) / np.max(vertices[:, 0])
-    vertices[:, 1] *= (map_size - 1) / np.max(vertices[:, 1])
-    vertices[:, 2] *= (map_size - 1) / np.max(vertices[:, 2])
-    vertices = np.floor(vertices).astype(dtype=np.int32)
-    vertices = np.unique(vertices, axis=0)
+    voxels = np.concatenate(volumes, axis=1)
+    voxels[:, 0] *= (map_size - 1) / np.max(voxels[:, 0])
+    voxels[:, 1] *= (map_size - 1) / np.max(voxels[:, 1])
+    voxels[:, 2] *= (map_size - 1) / np.max(voxels[:, 2])
+    voxels = np.floor(voxels).astype(dtype=np.int64)
+    voxels = np.unique(voxels, axis=0)
 
-    volume[vertices[:, 0], vertices[:, 1], vertices[:, 2]] = 1
+    volume = np.zeros((map_size, map_size, map_size)).astype(np.int64)
+    volume[voxels[:, 0], voxels[:, 1], voxels[:, 2]] = voxels[:, 3]
     return volume
 
 
 if __name__ == "__main__":
-    ds, dl = create_dataloader("../../bdataset/images/train", "../../bdataset/labels/train", batch_size=10)
+    ds, dl = create_dataloader("../../bdataset_tiny/images/train", "../../bdataset_tiny/labels/train", batch_size=10)
     i0, ls, vxs = next(iter(dl))
     plot_volumes(vxs)

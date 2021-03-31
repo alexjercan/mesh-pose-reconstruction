@@ -4,6 +4,7 @@
 #
 # References:
 #
+
 import glob
 import os
 from pathlib import Path
@@ -119,13 +120,6 @@ def init_weights(m):
         torch.nn.init.constant_(m.bias, 0)
 
 
-def var_or_cuda(x):
-    if torch.cuda.is_available():
-        x = x.cuda(non_blocking=True)
-
-    return x
-
-
 def load_checkpoint(encoder, decoder, checkpoint_file, device):
     checkpoint = torch.load(checkpoint_file, map_location=device)
     init_epoch = checkpoint['epoch_idx']
@@ -148,10 +142,14 @@ def save_checkpoint(epoch_idx, encoder, decoder, dir_checkpoints):
     torch.save(checkpoint, output_path)
 
 
-def plot_volumes(volumes, th=0):
+def plot_volumes(volumes):
     for volume in volumes:
-        xd, yd, zd = np.where(volume.numpy() > th)
+        volume = volume.numpy()
+        xd, yd, zd = np.where(volume > 0)
+        cd = volume[xd, yd, zd]
         fig = plt.figure()
         ax = plt.axes(projection='3d')
-        ax.scatter3D(xd, yd, zd, c=zd, cmap='Greens', s=100, marker="o")
+        for c, x, y, z in zip(cd, yd, xd, zd):
+            cm = plt.cm.colors.ListedColormap(plt.cm.hsv(c/100))
+            ax.scatter3D(x, y, z, c=c, cmap=cm, s=100, marker="o")
         plt.show()
