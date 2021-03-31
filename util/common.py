@@ -144,6 +144,8 @@ def save_checkpoint(epoch_idx, encoder, decoder, dir_checkpoints):
 
 
 def plot_volumes(volumes, img_files):
+    if isinstance(volumes, torch.Tensor):
+        volumes = volumes.numpy()
     cmap = cm.get_cmap('hsv', 100)
     for volume, img_file in zip(volumes, img_files):
         voxels = volume > 0
