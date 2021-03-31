@@ -43,14 +43,12 @@ class BDataset(Dataset):
         self.layer_files = load_img_paths(self.img_path, used_layers)
         self.img_files = self.layer_files[self.used_layers[0]]
         self.mesh_files = load_mesh_paths(self.mesh_path)
-        self.layers = [None] * len(self.img_files)
-        self.meshes = [None] * len(self.img_files)
 
     def __len__(self):
         return len(self.img_files)
 
     def __getitem__(self, index):
-        layers, voxels, (h0, w0), (h, w) = load_data(self, index)
+        layers, volume, (h0, w0), (h, w) = load_data(self, index)
         layers = {k: letterbox(layers[k], self.img_size, auto=False, scale_up=self.augment)[0] for k in layers}
 
         # Convert
@@ -64,14 +62,10 @@ class BDataset(Dataset):
         img0 = np.ascontiguousarray(img0)
         layers = np.ascontiguousarray(layers)
 
-        return torch.from_numpy(img0), torch.from_numpy(layers), torch.from_numpy(voxels)
+        return torch.from_numpy(img0), torch.from_numpy(layers), torch.from_numpy(volume)
 
 
 def load_data(self, index):
-    layers0 = self.layers[index]
-    if layers0 is not None:
-        return copy(layers0), self.img_hw0[index], self.img_hw[index]
-
     layers0 = {}
     hw0, hw = (0, 0), (0, 0)
     if L_RGB in self.used_layers:
@@ -83,9 +77,9 @@ def load_data(self, index):
     if L_NORMAL in self.used_layers:
         normal0, hw0, hw = load_normal(self.layer_files[L_NORMAL], index, self.img_size, self.augment)
         layers0[L_NORMAL] = normal0
-    voxels0 = load_voxels(self.mesh_files, index, self.map_size)
+    volume0 = load_volume(self.mesh_files, index, self.map_size)
 
-    return layers0, voxels0, hw0, hw
+    return layers0, volume0, hw0, hw
 
 
 def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scale_fill=False, scale_up=True, stride=32):
@@ -143,9 +137,9 @@ def load_normal(layer_files, index, img_size, augment=None):
     return resize_img(img, img_size, augment)
 
 
-def load_voxels(mesh_files, index, map_size):
+def load_volume(mesh_files, index, map_size):
     meshes = pkl2mesh((mesh_files[index]))
-    voxels = np.zeros((map_size, map_size, map_size)).astype(np.float32)
+    volume = np.zeros((map_size, map_size, map_size)).astype(np.float32)
 
     vertices = np.concatenate([vs for (_, vs, _) in meshes], axis=1)
     vertices[:, 0] *= (map_size - 1) / np.max(vertices[:, 0])
@@ -154,8 +148,8 @@ def load_voxels(mesh_files, index, map_size):
     vertices = np.floor(vertices).astype(dtype=np.int32)
     vertices = np.unique(vertices, axis=0)
 
-    voxels[vertices[:, 0], vertices[:, 1], vertices[:, 2]] = 1
-    return voxels
+    volume[vertices[:, 0], vertices[:, 1], vertices[:, 2]] = 1
+    return volume
 
 
 if __name__ == "__main__":
