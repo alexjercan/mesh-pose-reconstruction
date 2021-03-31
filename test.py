@@ -23,7 +23,7 @@ def test(encoder=None, decoder=None):
                                             batch_size=config.BATCH_SIZE, used_layers=config.USED_LAYERS,
                                             img_size=config.IMAGE_SIZE, map_size=config.MAP_SIZE,
                                             augment=config.AUGMENT, workers=config.NUM_WORKERS,
-                                            pin_memory=config.PIN_MEMORY)
+                                            pin_memory=config.PIN_MEMORY, shuffle=False)
     if not encoder or not decoder:
         in_channels = num_channels(config.USED_LAYERS)
         encoder = Encoder(in_channels=in_channels)
