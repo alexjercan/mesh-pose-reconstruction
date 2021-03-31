@@ -186,10 +186,10 @@ def load_volume(mesh_files, index, map_size):
     meshes = pkl2mesh((mesh_files[index]))
     volumes = [[list(v) + [c + 1] for v in vs] for (c, vs, _) in meshes]
 
-    voxels = np.concatenate(volumes, axis=1)
-    voxels[:, 0] *= (map_size - 1) / np.max(voxels[:, 0])
-    voxels[:, 1] *= (map_size - 1) / np.max(voxels[:, 1])
-    voxels[:, 2] *= (map_size - 1) / np.max(voxels[:, 2])
+    voxels = np.concatenate(volumes, axis=0)
+    voxels[:, 0] *= (map_size - 1) / max(np.max(voxels[:, 0]), 1)
+    voxels[:, 1] *= (map_size - 1) / max(np.max(voxels[:, 1]), 1)
+    voxels[:, 2] *= (map_size - 1) / max(np.max(voxels[:, 2]), 1)
     voxels = np.floor(voxels).astype(dtype=np.int64)
     voxels = np.unique(voxels, axis=0)
 
@@ -199,9 +199,10 @@ def load_volume(mesh_files, index, map_size):
 
 
 if __name__ == "__main__":
-    _, dl = create_dataloader("../../bdataset_tiny/images/train", "../../bdataset_tiny/labels/train", batch_size=2)
-    _, _, vxs, img_files = next(iter(dl))
-    plot_volumes(vxs, img_files)
+    _, dl = create_dataloader("../../bdataset_tiny/images/train", "../../bdataset_tiny/labels/train", batch_size=2, shuffle=False)
+    _, _, vms, img_files = next(iter(dl))
+
+    plot_volumes(vms, img_files)
 
     ds = LoadImages("../../bdataset_tiny/images/train")
     _, _, img_files = next(iter(ds))

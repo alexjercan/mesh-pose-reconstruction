@@ -12,6 +12,7 @@ from pathlib import Path
 import cv2
 import pickle
 import matplotlib.pyplot as plt
+from matplotlib import cm
 
 import numpy as np
 import torch
@@ -143,16 +144,16 @@ def save_checkpoint(epoch_idx, encoder, decoder, dir_checkpoints):
 
 
 def plot_volumes(volumes, img_files):
+    cmap = cm.get_cmap('hsv', 100)
     for volume, img_file in zip(volumes, img_files):
-        volume = volume.numpy()
-        xd, yd, zd = np.where(volume > 0)
-        cd = volume[xd, yd, zd]
-        _ = plt.figure()
+        voxels = volume > 0
+        colors = np.zeros(voxels.shape + (4,))
+        colors[..., 0:4] = cmap(volume/100)
         ax = plt.axes(projection='3d')
-        for c, x, y, z in zip(cd, yd, xd, zd):
-            cm = plt.cm.colors.ListedColormap(plt.cm.hsv(c/100))
-            ax.scatter3D(x, y, z, c=c, cmap=cm, s=100, marker="o")
-            ax.set_title(img_file)
+        ax.voxels(voxels, facecolors=colors,
+                  edgecolors=np.clip(2*colors - 0.5, 0, 1),
+                  linewidth=0.5)
+        ax.set_title(img_file)
         plt.show()
 
 
