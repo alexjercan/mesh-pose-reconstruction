@@ -12,7 +12,7 @@ import config
 from models.decoder import Decoder
 from models.encoder import Encoder
 from models.loss import LossFunction
-from util.common import num_channels, load_checkpoint, plot_volumes, get_metrics, to_volume
+from util.common import num_channels, load_checkpoint, plot_volumes, predictions_iou, to_volume
 from util.dataset import create_dataloader
 
 
@@ -49,12 +49,13 @@ def test(encoder=None, decoder=None):
 
             features = encoder(layers)
             predictions = decoder(features)
+
             loss = loss_fn(predictions, volumes)
             losses.append(loss.item())
 
-            iou = get_metrics(predictions, volumes, config.VOXEL_THRESH)
-            mean_iou = sum(iou) / len(iou)
-            ious.append(mean_iou)
+            iou = predictions_iou(predictions, volumes, config.VOXEL_THRESH)
+            ious.append(iou)
+
             mean_iou = sum(ious) / len(ious)
             mean_loss = sum(losses) / len(losses)
             loop.set_postfix(loss=mean_loss, mean_iou=mean_iou)

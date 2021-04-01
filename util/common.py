@@ -159,17 +159,15 @@ def plot_volumes(volumes, img_files):
         plt.show()
 
 
-def get_metrics(predictions, volumes, voxel_thresh: list):
-    sample_iou = []
-    _volumes = torch.ge(volumes, 1).float()
-    for th in voxel_thresh:
-        _volume = torch.ge(to_volume(predictions, th), 1).float()
-        intersection = torch.sum(_volume.mul(_volumes)).float()
-        union = torch.sum(torch.ge(_volume.add(_volumes), 1)).float()
-        sample_iou.append((intersection / union).item())
-    return sample_iou
+def predictions_iou(predictions, volumes, threshold=0.5):
+    gt_volumes = torch.ge(volumes, 1).float()
+    pr_volumes = torch.ge(to_volume(predictions, threshold), 1).float()
+    intersection = torch.sum(pr_volumes.mul(gt_volumes), dim=(1,2,3)).float()
+    union = torch.sum(torch.ge(pr_volumes.add(gt_volumes), 1), dim=(1,2,3)).float()
+    return (intersection / union).mean().item()
 
 
 def to_volume(predictions, threshold=0.5):
-    predictions = predictions.where(predictions >= threshold, torch.zeros_like(predictions))
-    return torch.argmax(predictions, dim=1)
+    conf, pred = torch.max(predictions, dim=1)
+    pred = torch.where(conf > threshold, pred, torch.zeros_like(pred))
+    return pred
