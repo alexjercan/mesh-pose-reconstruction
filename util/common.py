@@ -163,12 +163,13 @@ def get_metrics(predictions, volumes, voxel_thresh: list):
     sample_iou = []
     _volumes = torch.ge(volumes, 1).float()
     for th in voxel_thresh:
-        _volume = torch.ge(to_volume(predictions), th).float()
+        _volume = torch.ge(to_volume(predictions, th), 1).float()
         intersection = torch.sum(_volume.mul(_volumes)).float()
         union = torch.sum(torch.ge(_volume.add(_volumes), 1)).float()
         sample_iou.append((intersection / union).item())
     return sample_iou
 
 
-def to_volume(predictions):
+def to_volume(predictions, threshold=0.5):
+    predictions = predictions.where(predictions >= threshold, torch.zeros_like(predictions))
     return torch.argmax(predictions, dim=1)
