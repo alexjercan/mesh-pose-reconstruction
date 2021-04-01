@@ -11,7 +11,7 @@ from tqdm import tqdm
 import config
 from models.decoder import Decoder
 from models.encoder import Encoder
-from util.common import num_channels, load_checkpoint, plot_volumes, get_metrics, to_volume
+from util.common import num_channels, load_checkpoint, plot_volumes, to_volume
 from util.dataset import LoadImages
 
 
