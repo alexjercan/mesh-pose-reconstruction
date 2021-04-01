@@ -36,7 +36,8 @@ def test(encoder=None, decoder=None):
     loss_fn = LossFunction()
 
     loop = tqdm(dataloader, leave=True)
-    encoder_losses = []
+    losses = []
+    ious = []
 
     encoder.eval()
     decoder.eval()
@@ -48,13 +49,15 @@ def test(encoder=None, decoder=None):
 
             features = encoder(layers)
             predictions = decoder(features)
-            encoder_loss = loss_fn(predictions, volumes)
-            encoder_losses.append(encoder_loss.item())
+            loss = loss_fn(predictions, volumes)
+            losses.append(loss.item())
 
-            sample_iou = get_metrics(predictions, volumes, config.VOXEL_THRESH)
-            sample_iou = ['%.4f' % si for si in sample_iou]
-            mean_loss = sum(encoder_losses) / len(encoder_losses)
-            loop.set_postfix(loss=mean_loss, iou=sample_iou)
+            iou = get_metrics(predictions, volumes, config.VOXEL_THRESH)
+            mean_iou = sum(iou) / len(iou)
+            ious.append(mean_iou)
+            mean_iou = sum(ious) / len(ious)
+            mean_loss = sum(losses) / len(losses)
+            loop.set_postfix(loss=mean_loss, mean_iou=mean_iou)
 
             if i == 0 and config.PLOT:
                 plot_volumes(to_volume(predictions).cpu(), img_files)
