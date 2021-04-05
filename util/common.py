@@ -159,9 +159,9 @@ def plot_volumes(volumes, img_files):
         plt.show()
 
 
-def predictions_iou(predictions, volumes, threshold=0.5):
-    gt_volumes = torch.ge(volumes, 1).float()
-    pr_volumes = torch.ge(to_volume(predictions, threshold), 1).float()
+def predictions_iou(pr_volumes, gt_volumes):
+    gt_volumes = torch.ge(gt_volumes, 1).float()
+    pr_volumes = torch.ge(pr_volumes, 1).float()
     intersection = torch.sum(pr_volumes.mul(gt_volumes), dim=(1,2,3)).float()
     union = torch.sum(torch.ge(pr_volumes.add(gt_volumes), 1), dim=(1,2,3)).float()
     return (intersection / union).mean().item()

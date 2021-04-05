@@ -6,7 +6,6 @@
 #
 
 import torch
-from tqdm import tqdm
 
 import config
 from models.decoder import Decoder
@@ -27,12 +26,12 @@ def detect(path, encoder=None, decoder=None):
         encoder = encoder.to(config.DEVICE)
         decoder = decoder.to(config.DEVICE)
 
-        epoch_idx, encoder, decoder = load_checkpoint(encoder, decoder, config.CHECKPOINT_FILE, config.DEVICE)
+        _, encoder, decoder = load_checkpoint(encoder, decoder, config.CHECKPOINT_FILE, config.DEVICE)
 
     encoder.eval()
     decoder.eval()
 
-    for im0, layers, path in dataset:
+    for _, layers, path in dataset:
         with torch.no_grad():
             layers = torch.from_numpy(layers).to(config.DEVICE, non_blocking=True)
             if layers.ndimension() == 3:
@@ -40,8 +39,9 @@ def detect(path, encoder=None, decoder=None):
 
             features = encoder(layers)
             predictions = decoder(features)
+            _, out = predictions, predictions.sigmoid()
 
-            plot_volumes(to_volume(predictions).cpu(), [path])
+            plot_volumes(to_volume(out).cpu(), [path])
 
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ def train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decod
     loop = tqdm(dataloader, leave=True)
     losses = []
 
-    for i, (img0s, layers, volumes, _) in enumerate(loop):
+    for _, (_, layers, volumes, _) in enumerate(loop):
         layers = layers.to(config.DEVICE, non_blocking=True)
         volumes = volumes.to(config.DEVICE, non_blocking=True)
 
@@ -48,7 +48,7 @@ def train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decod
 def train():
     torch.backends.cudnn.benchmark = True
 
-    dataset, dataloader = create_dataloader(config.IMG_DIR + "/train", config.MESH_DIR + "/train",
+    _, dataloader = create_dataloader(config.IMG_DIR + "/train", config.MESH_DIR + "/train",
                                             batch_size=config.BATCH_SIZE, used_layers=config.USED_LAYERS,
                                             img_size=config.IMAGE_SIZE, map_size=config.MAP_SIZE,
                                             augment=config.AUGMENT, workers=config.NUM_WORKERS,

@@ -19,7 +19,7 @@ from util.dataset import create_dataloader
 def test(encoder=None, decoder=None):
     torch.backends.cudnn.benchmark = True
 
-    dataset, dataloader = create_dataloader(config.IMG_DIR + "/test", config.MESH_DIR + "/test",
+    _, dataloader = create_dataloader(config.IMG_DIR + "/test", config.MESH_DIR + "/test",
                                             batch_size=config.BATCH_SIZE, used_layers=config.USED_LAYERS,
                                             img_size=config.IMAGE_SIZE, map_size=config.MAP_SIZE,
                                             augment=config.AUGMENT, workers=config.NUM_WORKERS,
@@ -31,7 +31,7 @@ def test(encoder=None, decoder=None):
         encoder = encoder.to(config.DEVICE)
         decoder = decoder.to(config.DEVICE)
 
-        epoch_idx, encoder, decoder = load_checkpoint(encoder, decoder, config.CHECKPOINT_FILE, config.DEVICE)
+        _, encoder, decoder = load_checkpoint(encoder, decoder, config.CHECKPOINT_FILE, config.DEVICE)
 
     loss_fn = LossFunction()
 
@@ -42,18 +42,19 @@ def test(encoder=None, decoder=None):
     encoder.eval()
     decoder.eval()
 
-    for i, (img0s, layers, volumes, img_files) in enumerate(loop):
+    for i, (_, layers, volumes, img_files) in enumerate(loop):
         with torch.no_grad():
             layers = layers.to(config.DEVICE, non_blocking=True)
             volumes = volumes.to(config.DEVICE, non_blocking=True)
 
             features = encoder(layers)
             predictions = decoder(features)
+            out_train, out = predictions, predictions.sigmoid()
 
-            loss = loss_fn(predictions, volumes)
+            loss = loss_fn(out_train, volumes)
             losses.append(loss.item())
 
-            iou = predictions_iou(predictions, volumes, config.VOXEL_THRESH)
+            iou = predictions_iou(to_volume(predictions, config.VOXEL_THRESH), volumes)
             ious.append(iou)
 
             mean_iou = sum(ious) / len(ious)
@@ -61,7 +62,7 @@ def test(encoder=None, decoder=None):
             loop.set_postfix(loss=mean_loss, mean_iou=mean_iou)
 
             if i == 0 and config.PLOT:
-                plot_volumes(to_volume(predictions).cpu(), img_files)
+                plot_volumes(to_volume(out).cpu(), img_files)
                 plot_volumes(volumes.cpu(), img_files)
 
 
