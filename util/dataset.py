@@ -50,7 +50,7 @@ class LoadImages:
 
         layers0, _, _ = load_layers(self.layer_files, self.count, self.used_layers)
         self.count += 1
-        print(f'image {self.count}/{self.nf} {path}: ', end='')
+        print(f'image {self.count}/{self.nf} {path}')
 
         assert layers0, f"Cannot load images for layers: {self.used_layers}"
         layers0 = {k: letterbox(layers0[k], self.img_size, stride=self.stride)[0] for k in layers0}
