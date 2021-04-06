@@ -31,3 +31,7 @@ IMG_DIR = "../" + DATASET + "/images/"
 MESH_DIR = "../" + DATASET + "/labels/"
 DETECT_PATH = "./data/images"
 USED_LAYERS = [L_RGB, L_DEPTH, L_NORMAL]
+
+NAMES = ['object01', 'object02', 'object03', 'object04', 'object05', 'object06', 'object07', 'object08', 'object09', 'object10',
+         'object11', 'object12', 'object13', 'object14', 'object15', 'object16', 'object17', 'object18', 'object19', 'object20',
+         'object21', 'object22', 'object23', 'object24', 'object25', 'object26', 'object27', 'object28', 'object29', 'object30']

@@ -41,7 +41,7 @@ def detect(path, encoder=None, decoder=None):
             predictions = decoder(features)
             _, out = predictions, predictions.sigmoid()
 
-            plot_volumes(to_volume(out).cpu(), [path])
+            plot_volumes(to_volume(out).cpu(), [path], config.NAMES)
 
 
 if __name__ == "__main__":

@@ -62,8 +62,8 @@ def test(encoder=None, decoder=None):
             loop.set_postfix(loss=mean_loss, mean_iou=mean_iou)
 
             if i == 0 and config.PLOT:
-                plot_volumes(to_volume(out).cpu(), img_files)
-                plot_volumes(volumes.cpu(), img_files)
+                plot_volumes(to_volume(out).cpu(), img_files, config.NAMES)
+                plot_volumes(volumes.cpu(), img_files, config.NAMES)
 
 
 if __name__ == "__main__":

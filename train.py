@@ -21,7 +21,7 @@ from util.common import num_channels, init_weights, save_checkpoint, load_checkp
 from util.dataset import create_dataloader
 
 
-def train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decoder_solver):
+def train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decoder_solver, epoch_idx):
     loop = tqdm(dataloader, leave=True)
     losses = []
 
@@ -42,7 +42,7 @@ def train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decod
         decoder_solver.step()
 
         mean_loss = sum(losses) / len(losses)
-        loop.set_postfix(loss=mean_loss)
+        loop.set_postfix(loss=mean_loss, epoch=epoch_idx)
 
 
 def train():
@@ -86,7 +86,7 @@ def train():
     for epoch_idx in range(init_epoch, config.NUM_EPOCHS):
         encoder.train()
         decoder.train()
-        train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decoder_solver)
+        train_one_epoch(encoder, decoder, dataloader, loss_fn, encoder_solver, decoder_solver, epoch_idx)
         encoder_lr_scheduler.step()
         decoder_lr_scheduler.step()
 

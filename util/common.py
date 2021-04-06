@@ -12,6 +12,7 @@ from pathlib import Path
 import cv2
 import pickle
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 from matplotlib import cm
 
 import numpy as np
@@ -143,7 +144,13 @@ def save_checkpoint(epoch_idx, encoder, decoder, dir_checkpoints):
     torch.save(checkpoint, output_path)
 
 
-def plot_volumes(volumes, img_files):
+def build_handles(volume, colors, classes=None):
+    labels = np.unique(np.concatenate((volume[..., np.newaxis], colors), axis=3).reshape(-1, 5), axis=0)
+    handles = [mpatches.Patch(color=label[1:], label=f'{get_class_name(int(label[0]), classes)}') for label in labels if label[0] > 0]
+    return handles
+
+
+def plot_volumes(volumes, img_files, classes=None):
     if isinstance(volumes, torch.Tensor):
         volumes = volumes.numpy()
     cmap = cm.get_cmap('hsv', 100)
@@ -156,6 +163,8 @@ def plot_volumes(volumes, img_files):
                   edgecolors=np.clip(2*colors - 0.5, 0, 1),
                   linewidth=0.5)
         ax.set_title(img_file)
+        handles = build_handles(volume, colors, classes)
+        ax.legend(handles=handles)
         plt.show()
 
 
@@ -171,3 +180,7 @@ def to_volume(predictions, threshold=0.5):
     conf, pred = torch.max(predictions, dim=1)
     pred = torch.where(conf > threshold, pred, torch.zeros_like(pred))
     return pred
+
+
+def get_class_name(idx, classes=None):
+    return idx if not classes else classes[idx-1]
