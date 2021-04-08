@@ -49,9 +49,8 @@ def test(encoder=None, decoder=None):
 
             features = encoder(layers)
             predictions = decoder(features)
-            out_train, out = predictions, predictions.sigmoid()
 
-            loss = loss_fn(out_train, volumes)
+            loss = loss_fn(predictions, volumes)
             losses.append(loss.item())
 
             iou = predictions_iou(to_volume(predictions, config.VOXEL_THRESH), volumes)
@@ -62,7 +61,7 @@ def test(encoder=None, decoder=None):
             loop.set_postfix(loss=mean_loss, mean_iou=mean_iou)
 
             if i == 0 and config.PLOT:
-                plot_volumes(to_volume(out).cpu(), img_files, config.NAMES)
+                plot_volumes(to_volume(predictions).cpu(), img_files, config.NAMES)
                 plot_volumes(volumes.cpu(), img_files, config.NAMES)
 
 

@@ -178,6 +178,7 @@ def predictions_iou(pr_volumes, gt_volumes):
 
 def to_volume(predictions, threshold=0.5):
     conf, pred = torch.max(predictions, dim=1)
+    conf = torch.sigmoid(conf)
     pred = torch.where(conf > threshold, pred, torch.zeros_like(pred))
     return pred
 
