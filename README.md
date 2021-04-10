@@ -1,6 +1,38 @@
-import torch
-from util.common import L_RGB, L_DEPTH, L_NORMAL
+# 3D Reconstruction Using Image, Depth and Normal Maps
 
+![Overview](./resources/overview.png)
+
+## Datasets
+
+I used the blender API to generate a synthetic dataset based on the [T-LESS](http://cmp.felk.cvut.cz/t-less/) dataset.
+
+- [blenderRenderer](https://github.com/onorabil/blenderRenderer)
+- [resources](https://drive.google.com/drive/folders/1IlFDUHxvjXrwdo9GdHM764n9HKwnzfml)
+
+## Pretrained Model
+
+Pretrained models are available in the latest [release](https://github.com/alexjercan/mesh-pose-reconstruction/releases/tag/v1.0)
+
+## Prerequisites
+
+### Clone the Code Repository
+
+```shell
+git clone https://github.com/alexjercan/mesh-pose-reconstruction.git
+```
+
+### Install Python Denpendencies
+
+```
+cd mesh-pose-reconstruction
+pip install -r requirements.txt
+```
+
+### Update Settings in `config.py`
+
+Default configuration is available [here](./config.py).
+
+```python
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Dataset Configuration
@@ -43,3 +75,26 @@ CHECKPOINT_FILE = "normal.pth"
 NAMES = ['object01', 'object02', 'object03', 'object04', 'object05', 'object06', 'object07', 'object08', 'object09', 'object10',
          'object11', 'object12', 'object13', 'object14', 'object15', 'object16', 'object17', 'object18', 'object19', 'object20',
          'object21', 'object22', 'object23', 'object24', 'object25', 'object26', 'object27', 'object28', 'object29', 'object30']
+```
+
+## Get Started
+
+To train the model, you can simply use the following command:
+
+```
+python3 train.py
+```
+
+To test the model, you can simply use the following command:
+
+```
+python3 test.py
+```
+
+To view reconstruction result, you can run:
+
+```
+python3 detect.py
+```
+
+
