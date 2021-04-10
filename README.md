@@ -97,4 +97,7 @@ To view reconstruction result, you can run:
 python3 detect.py
 ```
 
+## Environments
+
+- **Google Colab** notebooks with free GPU: <a href="https://colab.research.google.com/github/alexjercan/mesh-pose-reconstruction/blob/master/tutorial.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">
 
