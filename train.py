@@ -80,8 +80,7 @@ def train():
     if config.CHECKPOINT_FILE and config.LOAD_MODEL:
         init_epoch, encoder, decoder = load_checkpoint(encoder, decoder, config.CHECKPOINT_FILE, config.DEVICE)
 
-    output_dir = os.path.join(config.OUT_PATH, '%s', re.sub("[^0-9a-zA-Z]+", "-", dt.now().isoformat()))
-    runs_dir = output_dir % 'runs'
+    output_dir = os.path.join(config.OUT_PATH, re.sub("[^0-9a-zA-Z]+", "-", dt.now().isoformat()))
 
     for epoch_idx in range(init_epoch, config.NUM_EPOCHS):
         encoder.train()
@@ -93,12 +92,12 @@ def train():
         if config.TEST:
             test(encoder, decoder)
         if config.SAVE_MODEL:
-            save_checkpoint(epoch_idx, encoder, decoder, runs_dir)
+            save_checkpoint(epoch_idx, encoder, decoder, output_dir)
 
     if not config.TEST:
         test(encoder, decoder)
     if not config.SAVE_MODEL:
-        save_checkpoint(config.NUM_EPOCHS - 1, encoder, decoder, runs_dir)
+        save_checkpoint(config.NUM_EPOCHS - 1, encoder, decoder, output_dir)
 
 
 if __name__ == "__main__":

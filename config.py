@@ -26,7 +26,8 @@ GAMMA = .5
 WEIGHT_DECAY = 1e-4
 
 # Train Configuration
-NUM_EPOCHS = 35
+NUM_EPOCHS = 40
+OUT_PATH = './runs'
 TEST = True
 
 # Test/Detect Configuration
